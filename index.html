@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Resume Optimizer</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #10b981;
+            --dark: #1f2937;
+            --light: #f9fafb;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --gray: #6b7280;
+            --gray-light: #e5e7eb;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f6f7ff 0%, #edf2f7 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            padding: 1.5rem 0;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            color: var(--gray);
+            margin-bottom: 1.5rem;
+        }
+
+        .app-container {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 15px rgba(0, 0, 0, 0.03);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.08), 0 16px 24px rgba(0, 0, 0, 0.06);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--gray-light);
+            color: var(--primary);
+        }
+
+        .form-section {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .jobs-section {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .resume-section {
+            flex: 2;
+            min-width: 100%;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-light);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        button {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        button.secondary {
+            background: white;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        button.danger {
+            background: linear-gradient(90deg, var(--danger) 0%, #f87171 100%);
+        }
+
+        .job-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .job-item {
+            background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+            border-left: 4px solid var(--primary);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .job-item:hover {
+            transform: translateX(5px);
+        }
+
+        .job-item.active {
+            border-left-color: var(--secondary);
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        }
+
+        .job-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .job-company {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .job-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--gray);
+        }
+
+        .resume-preview {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            min-height: 400px;
+        }
+
+        .resume-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .tab-container {
+            margin-bottom: 1rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: 500;
+        }
+
+        .tab:hover {
+            color: var(--primary);
+        }
+
+        .tab.active {
+            border-bottom-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .tab-content {
+            padding: 1rem 0;
+        }
+
+        .resume-personal {
+            margin-bottom: 1.5rem;
+        }
+
+        .resume-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .resume-contact {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-bottom: 0.5rem;
+        }
+
+        .resume-section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--gray-light);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .resume-job {
+            margin-bottom: 1.5rem;
+        }
+
+        .resume-job-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .resume-job-title {
+            font-weight: 600;
+        }
+
+        .resume-job-date {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .resume-job-company {
+            font-style: italic;
+            margin-bottom: 0.5rem;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 1rem;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            transform: translateY(100px);
+            opacity: 0;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast-error {
+            border-left: 4px solid var(--danger);
+        }
+
+        .toast-icon {
+            font-size: 1.2rem;
+        }
+
+        .toast-success .toast-icon {
+            color: var(--success);
+        }
+
+        .toast-error .toast-icon {
+            color: var(--danger);
+        }
+
+        .toast-message {
+            flex: 1;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0;
+        }
+
+        .toast-close:hover {
+            color: var(--dark);
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">AI-Powered Resume Optimizer</div>
+            <div class="tagline">Create tailored resumes for each job application</div>
+        </header>
+
+        <div class="app-container">
+            <div class="form-section">
+                <div class="card">
+                    <h2 class="section-title">Add New Job Application</h2>
+                    <form id="jobForm">
+                        <div class="form-group">
+                            <label for="jobTitle">Job Title</label>
+                            <input type="text" id="jobTitle" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="companyName">Company Name</label>
+                            <input type="text" id="companyName" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="location">Location</label>
+                            <input type="text" id="location">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="applyDate">Application Date</label>
+                            <input type="date" id="applyDate" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="jobDescription">Job Description</label>
+                            <textarea id="jobDescription" placeholder="Paste the full job description here"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="notes">Personal Notes</label>
+                            <textarea id="notes" placeholder="Add any personal notes about this application"></textarea>
+                        </div>
+                        
+                        <button type="submit" id="saveJobBtn">Save Job Application</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="jobs-section">
+                <div class="card">
+                    <h2 class="section-title">Your Job Applications</h2>
+                    <div id="jobList" class="job-list">
+                        <div class="empty-state">
+                            <p>No job applications added yet.</p>
+                            <p>Fill out the form to add your first job!</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card" id="userInfoCard">
+                    <h2 class="section-title">Your Information</h2>
+                    <form id="userInfoForm">
+                        <div class="form-group">
+                            <label for="fullName">Full Name</label>
+                            <input type="text" id="fullName" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="phone">Phone</label>
+                            <input type="tel" id="phone">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="linkedIn">LinkedIn</label>
+                            <input type="url" id="linkedIn" placeholder="https://linkedin.com/in/your-profile">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="portfolio">Portfolio/Website</label>
+                            <input type="url" id="portfolio" placeholder="https://your-website.com">
+                        </div>
+                        
+                        <button type="submit" id="saveUserInfoBtn">Save Information</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="resume-section" id="resumeSection" style="display: none;">
+                <div class="card">
+                    <div class="resume-actions">
+                        <h2 class="section-title">Tailored Resume</h2>
+                        <div>
+                            <button id="exportBtn" class="secondary">Export PDF</button>
+                            <button id="optimizeBtn">Optimize</button>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-container">
+                        <div class="tabs">
+                            <div class="tab active" data-tab="preview">Preview</div>
+                            <div class="tab" data-tab="edit">Edit</div>
+                        </div>
+                        
+                        <div class="tab-content">
+                            <div id="previewTab" class="resume-preview">
+                                <div class="resume-personal">
+                                    <div class="resume-name" id="resumeName">John Doe</div>
+                                    <div class="resume-contact">
+                                        <span id="resumeEmail">john@example.com</span>
+                                        <span id="resumePhone">(123) 456-7890</span>
+                                        <span id="resumeLinkedIn">linkedin.com/in/johndoe</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="resume-section">
+                                    <div class="resume-section-title">Summary</div>
+                                    <p id="resumeSummary">Experienced professional with a proven track record of success.</p>
+                                </div>
+                                
+                                <div class="resume-section">
+                                    <div class="resume-section-title">Experience</div>
+                                    <div id="resumeExperience">
+                                        <!-- Experience will be populated dynamically -->
+                                    </div>
+                                </div>
+                                
+                                <div class="resume-section">
+                                    <div class="resume-section-title">Skills</div>
+                                    <p id="resumeSkills">Leadership, Communication, Project Management</p>
+                                </div>
+                                
+                                <div class="resume-section">
+                                    <div class="resume-section-title">Education</div>
+                                    <div id="resumeEducation">
+                                        <!-- Education will be populated dynamically -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="editTab" style="display: none;">
+                                <form id="resumeForm">
+                                    <div class="form-group">
+                                        <label for="resumeSummaryEdit">Professional Summary</label>
+                                        <textarea id="resumeSummaryEdit" rows="4"></textarea>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="resumeExperienceEdit">Experience</label>
+                                        <textarea id="resumeExperienceEdit" rows="10" placeholder="Format: Job Title | Company | Date Range | Description"></textarea>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="resumeSkillsEdit">Skills</label>
+                                        <textarea id="resumeSkillsEdit" rows="4" placeholder="List your skills, separated by commas"></textarea>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="resumeEducationEdit">Education</label>
+                                        <textarea id="resumeEducationEdit" rows="6" placeholder="Format: Degree | Institution | Year | Description"></textarea>
+                                    </div>
+                                    
+                                    <button type="submit">Save Resume</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="toast" class="toast">
+        <div class="toast-icon">✓</div>
+        <div class="toast-message">Job application saved successfully!</div>
+        <button class="toast-close">×</button>
+    </div>
+
+    <script>
+        // Data Storage
+        const storage = {
+            get: key => {
+                const data = localStorage.getItem(key);
+                return data ? JSON.parse(data) : null;
+            },
+            set: (key, value) => {
+                localStorage.setItem(key, JSON.stringify(value));
+            }
+        };
+
+        // State Management
+        let state = {
+            jobs: storage.get('jobs') || [],
+            userInfo: storage.get('userInfo') || {
+                fullName: '',
+                email: '',
+                phone: '',
+                linkedIn: '',
+                portfolio: ''
+            },
+            resumes: storage.get('resumes') || {},
+            selectedJobId: null
+        };
+
+        // DOM Elements
+        const elements = {
+            jobForm: document.getElementById('jobForm'),
+            jobList: document.getElementById('jobList'),
+            userInfoForm: document.getElementById('userInfoForm'),
+            resumeSection: document.getElementById('resumeSection'),
+            tabs: document.querySelectorAll('.tab'),
+            previewTab: document.getElementById('previewTab'),
+            editTab: document.getElementById('editTab'),
+            resumeForm: document.getElementById('resumeForm'),
+            toast: document.getElementById('toast'),
+            resum

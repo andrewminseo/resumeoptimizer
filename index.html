@@ -590,4 +590,267 @@
             editTab: document.getElementById('editTab'),
             resumeForm: document.getElementById('resumeForm'),
             toast: document.getElementById('toast'),
-            resum
+            resumeName: document.getElementById('resumeName'),
+            resumeEmail: document.getElementById('resumeEmail'),
+            resumePhone: document.getElementById('resumePhone'),
+            resumeLinkedIn: document.getElementById('resumeLinkedIn'),
+            resumeSummary: document.getElementById('resumeSummary'),
+            resumeExperience: document.getElementById('resumeExperience'),
+            resumeSkills: document.getElementById('resumeSkills'),
+            resumeEducation: document.getElementById('resumeEducation'),
+            resumeSummaryEdit: document.getElementById('resumeSummaryEdit'),
+            resumeExperienceEdit: document.getElementById('resumeExperienceEdit'),
+            resumeSkillsEdit: document.getElementById('resumeSkillsEdit'),
+            resumeEducationEdit: document.getElementById('resumeEducationEdit'),
+            exportBtn: document.getElementById('exportBtn'),
+            optimizeBtn: document.getElementById('optimizeBtn')
+        };
+
+        // Populate User Info Form from state
+        function populateUserInfoForm() {
+            const { userInfo } = state;
+            for (const key in userInfo) {
+                const input = document.getElementById(key);
+                if (input) input.value = userInfo[key] || '';
+            }
+        }
+
+        // Save User Info
+        elements.userInfoForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            state.userInfo = {
+                fullName: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                linkedIn: document.getElementById('linkedIn').value,
+                portfolio: document.getElementById('portfolio').value
+            };
+            
+            storage.set('userInfo', state.userInfo);
+            showToast('Personal information saved successfully!', 'success');
+            
+            // Update resume preview if visible
+            if (state.selectedJobId) {
+                updateResumePreview();
+            }
+        });
+
+        // Add Job
+        elements.jobForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const job = {
+                id: Date.now().toString(),
+                title: document.getElementById('jobTitle').value,
+                company: document.getElementById('companyName').value,
+                location: document.getElementById('location').value,
+                applyDate: document.getElementById('applyDate').value,
+                description: document.getElementById('jobDescription').value,
+                notes: document.getElementById('notes').value
+            };
+            
+            state.jobs.push(job);
+            storage.set('jobs', state.jobs);
+            
+            // Create initial resume template
+            const resume = generateResume(job);
+            state.resumes[job.id] = resume;
+            storage.set('resumes', state.resumes);
+            
+            showToast('Job application saved successfully!', 'success');
+            renderJobList();
+            this.reset();
+        });
+
+        // Generate initial resume from job description
+        function generateResume(job) {
+            // This is a simple template - in a real AI system, this would use AI to extract keywords
+            return {
+                summary: `Professional seeking the ${job.title} position at ${job.company}, bringing a strong background in relevant skills and experience.`,
+                experience: `Professional Experience\n\n1. Previous Job Title | Previous Company | YYYY-Present\n- Accomplished X resulting in Y\n- Managed team of Z people\n\n2. Earlier Job Title | Earlier Company | YYYY-YYYY\n- Achieved A resulting in B\n- Developed C process`,
+                skills: `Communication, Teamwork, Problem Solving, Adaptability, ${job.title.toLowerCase().includes('developer') ? 'Programming, JavaScript, HTML, CSS' : 'Project Management, Leadership, Organization'}`,
+                education: `Master's Degree | University Name | YYYY\n- Relevant coursework\n\nBachelor's Degree | University Name | YYYY\n- Graduated with honors`
+            };
+        }
+
+        // AI Optimization function (simulation)
+        function optimizeResume(job, resume) {
+            // In a real app, this would call an AI service
+            // For demo purposes, we'll just simulate some basic keyword matching
+            const keywords = extractKeywords(job.description);
+            
+            // Create an "AI optimized" resume
+            const optimizedResume = {
+                summary: `Results-driven professional with expertise in ${keywords.slice(0, 3).join(', ')} seeking the ${job.title} position at ${job.company}. Proven track record of delivering impactful results in ${keywords.slice(3, 5).join(' and ')}.`,
+                experience: resume.experience.replace('Accomplished X', `Improved ${keywords[0]} metrics by 35%`).replace('Managed team', `Led cross-functional team focused on ${keywords[1]}`),
+                skills: [...new Set([...resume.skills.split(', '), ...keywords.slice(0, 5)])].join(', '),
+                education: resume.education
+            };
+            
+            return optimizedResume;
+        }
+
+        // Extract keywords from job description
+        function extractKeywords(description) {
+            // Simple keyword extraction (would use AI/NLP in a real app)
+            const commonKeywords = [
+                'leadership', 'communication', 'project management', 
+                'innovation', 'teamwork', 'strategy', 'analytics',
+                'problem-solving', 'creative thinking', 'attention to detail',
+                'collaboration', 'customer service', 'self-motivated',
+                'JavaScript', 'React', 'Node.js', 'Python', 'data analysis', 
+                'agile', 'scrum', 'product development', 'UX/UI', 'research'
+            ];
+            
+            // This is a naive implementation - would use actual NLP in production
+            return commonKeywords.filter(keyword => 
+                description.toLowerCase().includes(keyword.toLowerCase())
+            ).slice(0, 10);
+        }
+
+        // Optimize button handler
+        elements.optimizeBtn.addEventListener('click', function() {
+            if (!state.selectedJobId) return;
+            
+            const job = state.jobs.find(j => j.id === state.selectedJobId);
+            const resume = state.resumes[state.selectedJobId];
+            
+            // Optimize the resume
+            const optimizedResume = optimizeResume(job, resume);
+            state.resumes[state.selectedJobId] = optimizedResume;
+            storage.set('resumes', state.resumes);
+            
+            // Update the UI
+            updateResumePreview();
+            updateResumeEditForm();
+            
+            showToast('Resume optimized for this job application!', 'success');
+        });
+
+        // Render Job List
+        function renderJobList() {
+            if (state.jobs.length === 0) {
+                elements.jobList.innerHTML = `
+                    <div class="empty-state">
+                        <p>No job applications added yet.</p>
+                        <p>Fill out the form to add your first job!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            elements.jobList.innerHTML = '';
+            
+            state.jobs.forEach(job => {
+                const jobElement = document.createElement('div');
+                jobElement.className = `job-item ${job.id === state.selectedJobId ? 'active' : ''}`;
+                jobElement.dataset.id = job.id;
+                
+                jobElement.innerHTML = `
+                    <div class="job-title">${job.title}</div>
+                    <div class="job-company">${job.company} - ${job.location || 'Remote'}</div>
+                    <div class="job-date">Applied: ${formatDate(job.applyDate)}</div>
+                    <div class="job-actions">
+                        <button class="btn-sm secondary view-btn">View</button>
+                        <button class="btn-sm danger delete-btn">Delete</button>
+                    </div>
+                `;
+                
+                elements.jobList.appendChild(jobElement);
+            });
+            
+            // Add event listeners
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const jobId = this.closest('.job-item').dataset.id;
+                    selectJob(jobId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const jobId = this.closest('.job-item').dataset.id;
+                    deleteJob(jobId);
+                });
+            });
+            
+            document.querySelectorAll('.job-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    selectJob(this.dataset.id);
+                });
+            });
+        }
+
+        // Select Job
+        function selectJob(jobId) {
+            state.selectedJobId = jobId;
+            
+            // Update job list UI
+            document.querySelectorAll('.job-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.id === jobId);
+            });
+            
+            // Show resume section
+            elements.resumeSection.style.display = 'block';
+            
+            // Update resume preview
+            updateResumePreview();
+            updateResumeEditForm();
+        }
+
+        // Delete Job
+        function deleteJob(jobId) {
+            if (!confirm('Are you sure you want to delete this job application?')) return;
+            
+            state.jobs = state.jobs.filter(job => job.id !== jobId);
+            delete state.resumes[jobId];
+            
+            storage.set('jobs', state.jobs);
+            storage.set('resumes', state.resumes);
+            
+            if (state.selectedJobId === jobId) {
+                state.selectedJobId = null;
+                elements.resumeSection.style.display = 'none';
+            }
+            
+            renderJobList();
+            showToast('Job application deleted', 'error');
+        }
+
+        // Update Resume Preview
+        function updateResumePreview() {
+            if (!state.selectedJobId) return;
+            
+            const { userInfo } = state;
+            const resume = state.resumes[state.selectedJobId];
+            
+            // Update personal info
+            elements.resumeName.textContent = userInfo.fullName || 'Your Name';
+            elements.resumeEmail.textContent = userInfo.email || 'your.email@example.com';
+            elements.resumePhone.textContent = userInfo.phone || '(123) 456-7890';
+            elements.resumeLinkedIn.textContent = userInfo.linkedIn ? userInfo.linkedIn.replace('https://linkedin.com/in/', 'linkedin.com/in/') : 'linkedin.com/in/yourprofile';
+            
+            // Update resume sections
+            elements.resumeSummary.textContent = resume.summary || '';
+            elements.resumeSkills.textContent = resume.skills || '';
+            
+            // Format experience section
+            const experienceHtml = formatSectionForHtml(resume.experience);
+            elements.resumeExperience.innerHTML = experienceHtml;
+            
+            // Format education section
+            const educationHtml = formatSectionForHtml(resume.education);
+            elements.resumeEducation.innerHTML = educationHtml;
+        }
+
+        // Update Resume Edit Form
+        function updateResumeEditForm() {
+            if (!state.selectedJobId) return;
+            
+            const resume = state.resumes[state.selectedJobId];
+            
+            elements.resumeSummaryEdit.value = resume.summary || '';
+            elements

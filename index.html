@@ -853,4 +853,111 @@
             const resume = state.resumes[state.selectedJobId];
             
             elements.resumeSummaryEdit.value = resume.summary || '';
-            elements
+            elements.resumeExperienceEdit.value = resume.experience || '';
+            elements.resumeSkillsEdit.value = resume.skills || '';
+            elements.resumeEducationEdit.value = resume.education || '';
+        }
+
+        // Format section for HTML display
+        function formatSectionForHtml(text) {
+            if (!text) return '';
+            
+            // Handle newlines and bullet points
+            return text
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n- /g, '<br>• ')
+                .replace(/\n/g, '<br>')
+                .replace(/^(.+)$/, '<p>$1</p>');
+        }
+
+        // Save Resume from Edit Form
+        elements.resumeForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!state.selectedJobId) return;
+            
+            state.resumes[state.selectedJobId] = {
+                summary: elements.resumeSummaryEdit.value,
+                experience: elements.resumeExperienceEdit.value,
+                skills: elements.resumeSkillsEdit.value,
+                education: elements.resumeEducationEdit.value
+            };
+            
+            storage.set('resumes', state.resumes);
+            updateResumePreview();
+            
+            // Switch to preview tab
+            switchTab('preview');
+            showToast('Resume updated successfully!', 'success');
+        });
+
+        // Tab switching
+        elements.tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                switchTab(this.dataset.tab);
+            });
+        });
+
+        function switchTab(tabName) {
+            // Update tab UI
+            elements.tabs.forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.tab === tabName);
+            });
+            
+            // Show relevant content
+            elements.previewTab.style.display = tabName === 'preview' ? 'block' : 'none';
+            elements.editTab.style.display = tabName === 'edit' ? 'block' : 'none';
+        }
+
+        // Export resume as PDF (simulation)
+        elements.exportBtn.addEventListener('click', function() {
+            if (!state.selectedJobId) return;
+            
+            showToast('Preparing PDF export...', 'success');
+            setTimeout(() => {
+                showToast('Resume exported as PDF!', 'success');
+            }, 1500);
+            
+            // In a real app, this would use a library like html2pdf.js
+            // to generate a PDF from the resume preview HTML
+        });
+
+        // Helper functions
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = elements.toast;
+            toast.className = `toast toast-${type} show`;
+            toast.querySelector('.toast-message').textContent = message;
+            toast.querySelector('.toast-icon').textContent = type === 'success' ? '✓' : '✕';
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Close toast
+        document.querySelector('.toast-close').addEventListener('click', function() {
+            elements.toast.classList.remove('show');
+        });
+
+        // Initialize the app
+        function init() {
+            populateUserInfoForm();
+            renderJobList();
+            
+            // If there's at least one job, select the first one
+            if (state.jobs.length > 0) {
+                selectJob(state.jobs[0].id);
+            }
+        }
+
+        // Start the app
+        init();
